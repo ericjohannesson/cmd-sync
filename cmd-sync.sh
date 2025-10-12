@@ -138,7 +138,7 @@ ignore_file_exists(){
 }
 
 DATE=$(date "+%Y-%m-%d-%H.%M.%S")
-TEMP_DIR=.cmd-sync_$DATE
+TEMP_DIR=$HOME/.cmd-sync_$DATE
 SRC_DIRS=$TEMP_DIR/src.dirs
 DEST_DIRS=$TEMP_DIR/dest.dirs
 SRC_FILES=$TEMP_DIR/src.files
