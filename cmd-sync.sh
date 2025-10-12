@@ -16,6 +16,8 @@
 # Written by Eric Johannesson, eric@ericjohannesson.com                     #
 #############################################################################
 
+set -e	# Abort if something fails
+
 display_usage(){
 echo "Usage:"
 echo ""
