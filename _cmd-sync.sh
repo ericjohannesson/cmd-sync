@@ -38,19 +38,19 @@ echo "  bash cmd-sync.sh 'gpg --decrypt --output \"\$OUT\" \"\$IN\"' path/to/enc
 
 if [ $# -lt 3 ]
 then
-	display_usage
-	exit
+    display_usage
+    exit
 fi
 
 if [ ! -d $2 ]
 then
-	echo "There is no directory with the name '$2'"
-	exit
+    echo "There is no directory with the name '$2'"
+    exit
 fi
 
 if [ ! -d $3 ]
 then
-	mkdir -p $3
+    mkdir -p $3
 fi
 
 
@@ -61,80 +61,80 @@ DEST=$(realpath $3)
 
 if [ $(echo $@ | grep "dry-run" -c "-") -ge 1 ]
 then
-	echo "THIS IS A DRY RUN (destination will not be modified)"
-	DRY_RUN=1
+    echo "THIS IS A DRY RUN (destination will not be modified)"
+    DRY_RUN=1
 else
-	DRY_RUN=0
+    DRY_RUN=0
 fi
 
 remove_dirs(){
-	if [ $DRY_RUN -eq 0 ]
-	then
-		while read LINE
-		do
-			if [ -d "$DEST/$LINE" ]
-			then
-				rm -r "$DEST/$LINE"
-			fi
-		done < $1
-	fi
+    if [ $DRY_RUN -eq 0 ]
+    then
+        while read LINE
+        do
+            if [ -d "$DEST/$LINE" ]
+            then
+                rm -r "$DEST/$LINE"
+            fi
+        done < $1
+    fi
 }
 
 
 make_dirs(){
-	if [ $DRY_RUN -eq 0 ]
-	then
-		while read LINE
-		do
-			mkdir -p "$DEST/$LINE"
-		done < $1
-	fi
+    if [ $DRY_RUN -eq 0 ]
+    then
+        while read LINE
+        do
+            mkdir -p "$DEST/$LINE"
+        done < $1
+    fi
 }
 
 remove_files(){
-	if [ $DRY_RUN -eq 0 ]
-	then
-		while read LINE
-		do
-			rm "$DEST/$LINE"
-		done < $1
-	fi
+    if [ $DRY_RUN -eq 0 ]
+    then
+        while read LINE
+        do
+            rm "$DEST/$LINE"
+        done < $1
+    fi
 }
 
 
 make_files(){
-	if [ $DRY_RUN -eq 0 ]
-	then
-		while read LINE
-		do
-			IN="$SRC/$LINE"
-			OUT="$DEST/$LINE"
-			eval $CMD
-			touch "$OUT" -r "$IN"
-		done < $1
-	fi
+    if [ $DRY_RUN -eq 0 ]
+    then
+        while read LINE
+        do
+            IN="$SRC/$LINE"
+            OUT="$DEST/$LINE"
+            eval $CMD
+            touch "$OUT" -r "$IN"
+        done < $1
+    fi
 }
 
 display_lines(){
-	sed 's/^/\t/' $1
+    sed 's/^/\t/' $1
 }
 
 number_of_lines(){
-	wc -l $1 | cut -f 1 -d ' '
+    wc -l $1 | cut -f 1 -d ' '
 }
 
 ignore_file_exists(){
-	if [ -f $SRC/.cmd-sync-ignore ]
-	then
-		if [ $(file -i $SRC/.cmd-sync-ignore | cut -f 2 -d ' ') = "text/plain;" ]
-		then
-			echo 1
-		else
-			echo 0
-		fi
-	else
-	echo 0
-	fi
+    if [ -f $SRC/.cmd-sync-ignore ]
+    then
+        if [ $(file -i $SRC/.cmd-sync-ignore | cut -f 2 -d ' ') = "text/plain;" ]
+        then
+            echo 1
+        else
+            echo 0
+        fi
+    else
+    echo 0
+    fi
 }
 
 DATE=$(date "+%Y-%m-%d-%H.%M.%S")
@@ -152,9 +152,9 @@ mkdir -p $TEMP_DIR
 
 if [ $(ignore_file_exists) -eq 1 ]
 then
-	find $SRC -type d -printf "%P\n" | grep -f $SRC/.cmd-sync-ignore -v | sort > $SRC_DIRS
+    find $SRC -type d -printf "%P\n" | grep -f $SRC/.cmd-sync-ignore -v | sort > $SRC_DIRS
 else
-	find $SRC -type d -printf "%P\n" | sort > $SRC_DIRS
+    find $SRC -type d -printf "%P\n" | sort > $SRC_DIRS
 fi
 
 find $DEST -type d -printf "%P\n" | sort > $DEST_DIRS
@@ -174,9 +174,9 @@ FORMAT="%P\t%T@\n"
 
 if [ $(ignore_file_exists) -eq 1 ]
 then
-	find $SRC -type f -printf $FORMAT | grep -f $SRC/.cmd-sync-ignore -v |sort > $SRC_FILES
+    find $SRC -type f -printf $FORMAT | grep -f $SRC/.cmd-sync-ignore -v |sort > $SRC_FILES
 else
-	find $SRC -type f -printf $FORMAT | sort > $SRC_FILES
+    find $SRC -type f -printf $FORMAT | sort > $SRC_FILES
 fi
 
 find $DEST -type f -printf $FORMAT | sort > $DEST_FILES
