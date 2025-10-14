@@ -10,7 +10,7 @@ The script uses [GNU find](https://www.gnu.org/software/findutils/) for listing 
 ```
 bash cmd-sync.sh '<shell command containing expressions '"$IN"' and '"$OUT"'>'
                   <path to source directory>
-                  <path to destination directory> [ dry-run ]
+                  <path to destination directory> [ --dry-run ]
 ```
 
 ### Examples
