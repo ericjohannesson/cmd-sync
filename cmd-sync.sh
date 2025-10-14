@@ -18,7 +18,7 @@
 
 set -e	# Abort if something fails
 
-display_usage(){
+print_usage(){
 echo "Usage:"
 echo ""
 echo "  bash cmd-sync.sh"
@@ -40,7 +40,7 @@ echo "  bash cmd-sync.sh 'gpg --decrypt --output \"\$OUT\" \"\$IN\"' path/to/enc
 
 if [ $# -lt 3 ]
 then
-	display_usage
+	print_usage
 	exit
 fi
 
@@ -65,7 +65,13 @@ then
 	echo "DRY RUN (destination will not be modified)"
 	DRY_RUN=1
 else
-	DRY_RUN=0
+	if [ "$4" = "" ]
+	then
+		DRY_RUN=0
+	else
+		print_usage
+		exit
+	fi
 fi
 
 remove_dirs(){
