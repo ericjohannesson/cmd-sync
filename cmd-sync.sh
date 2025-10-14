@@ -24,7 +24,7 @@ echo ""
 echo "  bash cmd-sync.sh"
 echo "      '<shell command containing expressions '\"\$IN\"' and '\"\$OUT\"'>'"
 echo "       <path to source directory>"
-echo "       <path to destination directory> [ dry-run ]"
+echo "       <path to destination directory> [ --dry-run ]"
 echo ""
 echo "Examples:"
 echo ""
@@ -60,10 +60,9 @@ CMD=$1
 SRC=$(realpath $2)
 DEST=$(realpath $3)
 
-
-if [ $(echo $@ | grep "dry-run" -c "-") -ge 1 ]
+if [ $4 = "--dry-run" ]
 then
-	echo "THIS IS A DRY RUN (destination will not be modified)"
+	echo "DRY RUN (destination will not be modified)"
 	DRY_RUN=1
 else
 	DRY_RUN=0
