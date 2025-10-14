@@ -60,7 +60,7 @@ CMD=$1
 SRC=$(realpath $2)
 DEST=$(realpath $3)
 
-if [ $4 = "--dry-run" ]
+if [ "$4" = "--dry-run" ]
 then
 	echo "DRY RUN (destination will not be modified)"
 	DRY_RUN=1
