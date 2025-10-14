@@ -41,13 +41,13 @@ echo "  bash cmd-sync.sh 'gpg --decrypt --output \"\$OUT\" \"\$IN\"' path/to/enc
 if [ $# -lt 3 ]
 then
 	print_usage
-	exit
+	exit 2
 fi
 
 if [ ! -d $2 ]
 then
 	echo "There is no directory with the name '$2'"
-	exit
+	exit 2
 fi
 
 if [ ! -d $3 ]
@@ -70,7 +70,7 @@ else
 		DRY_RUN=0
 	else
 		print_usage
-		exit
+		exit 2
 	fi
 fi
 
