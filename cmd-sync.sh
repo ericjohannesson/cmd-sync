@@ -22,20 +22,20 @@ print_usage(){
 echo "Usage:"
 echo ""
 echo "  bash cmd-sync.sh"
-echo "      '<shell command containing expressions '\"\$IN\"' and '\"\$OUT\"'>'"
+echo "      '<shell command containing expressions '\$IN' and '\$OUT'>'"
 echo "       <path to source directory>"
 echo "       <path to destination directory> [ --dry-run ]"
 echo ""
 echo "Examples:"
 echo ""
 echo "- Make the destination identical to the source:"
-echo "  bash cmd-sync.sh 'cp \"\$IN\" \"\$OUT\"' path/to/directory path/to/copied_directory"
+echo "  bash cmd-sync.sh 'cp \$IN \$OUT' path/to/directory path/to/copied_directory"
 echo ""
 echo "- Make the destination an encrypted version of the source:"
-echo "  bash cmd-sync.sh 'gpg --encrypt --recipient some@email.com --output \"\$OUT\" \"\$IN\"' path/to/directory path/to/encrypted_directory"
+echo "  bash cmd-sync.sh 'gpg --encrypt --recipient some@email.com --output \$OUT \$IN' path/to/directory path/to/encrypted_directory"
 echo ""
 echo "- Make the destination a decrypted version of the source:"
-echo "  bash cmd-sync.sh 'gpg --decrypt --output \"\$OUT\" \"\$IN\"' path/to/encrypted_directory path/to/directory"
+echo "  bash cmd-sync.sh 'gpg --decrypt --output \$OUT \$IN' path/to/encrypted_directory path/to/directory"
 }
 
 if [ $# -lt 3 ]
@@ -56,7 +56,7 @@ then
 fi
 
 
-CMD=$1
+CMD=$(echo $1 | sed 's/ \$IN / "$IN" /g' | sed 's/^\$IN /"$IN" /g' | sed 's/ \$IN$/ "$IN"/g' | sed 's/ \$OUT / "$OUT" /g' | sed 's/^\$OUT /"$OUT" /g' | sed 's/ \$OUT$/ "$OUT"/g')
 SRC=$(realpath $2)
 DEST=$(realpath $3)
 

@@ -8,7 +8,7 @@ The script uses [GNU find](https://www.gnu.org/software/findutils/) for listing 
 ### General syntax
 
 ```
-bash cmd-sync.sh '<shell command containing expressions '"$IN"' and '"$OUT"'>'
+bash cmd-sync.sh '<shell command containing expressions '$IN' and '$OUT'>'
                   <path to source directory>
                   <path to destination directory> [ --dry-run ]
 ```
@@ -18,17 +18,17 @@ bash cmd-sync.sh '<shell command containing expressions '"$IN"' and '"$OUT"'>'
 Make the destination identical to the source:
 
 ```bash
-bash cmd-sync.sh 'cp "$IN" "$OUT"' path/to/directory path/to/copied_directory
+bash cmd-sync.sh 'cp $IN $OUT' path/to/directory path/to/copied_directory
 ```
 
 Make the destination an encrypted version of the source:
 
 ```bash
-bash cmd-sync.sh 'gpg --encrypt --recipient some@email.com --output "$OUT" "$IN"' path/to/directory path/to/encrypted_directory
+bash cmd-sync.sh 'gpg --encrypt --recipient some@email.com --output $OUT $IN' path/to/directory path/to/encrypted_directory
 ```
 
 Make the destination a decrypted version of the source:
 
 ```bash
-bash cmd-sync.sh 'gpg --decrypt --output "$OUT" "$IN"' path/to/encrypted_directory path/to/directory
+bash cmd-sync.sh 'gpg --decrypt --output $OUT $IN' path/to/encrypted_directory path/to/directory
 ```
