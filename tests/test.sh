@@ -10,9 +10,9 @@ bash ../cmd-sync.sh 'gpg --decrypt --batch --yes --skip-verify --quiet --output 
 echo "#redact --dry-run:"
 bash ../cmd-sync.sh 'grep "hello" -v $IN > $OUT' input/files output/files --dry-run
 
-echo "# diff -r expected_output/files output/files:"
-diff -r expected_output/files output/files
+echo "# diff -r --color expected_output/files output/files:"
+diff -r --color expected_output/files output/files
 
-echo "# diff -r expected_output/copied_files output/copied_files:"
-diff -r expected_output/copied_files output/copied_files
+echo "# diff -r --color expected_output/copied_files output/copied_files:"
+diff -r --color expected_output/copied_files output/copied_files
 
