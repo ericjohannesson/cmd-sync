@@ -149,8 +149,7 @@ ignore_file_exists(){
 	fi
 }
 
-DATE=$(date "+%Y-%m-%d-%H.%M.%S")
-TEMP_DIR="$HOME/.cmd-sync_$DATE"
+TEMP_DIR=$(mktemp -d)
 SRC_DIRS="$TEMP_DIR/src.dirs"
 DEST_DIRS="$TEMP_DIR/dest.dirs"
 SRC_FILES="$TEMP_DIR/src.files"
