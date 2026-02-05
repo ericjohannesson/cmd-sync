@@ -4,21 +4,14 @@
 # A bash-script for making the file structure of a destination directory    #
 # identical to the file structure of a source directory (without changing   #
 # the source), where each destination file is the result of applying a      #
-# user-specified shell command to the corresponding source file. Beware,    #
-# however, that supplied with a suitable command, the script can do         #
-# virtually anything (like erasing the source directory).                   #
+# user-specified shell command to the corresponding source file.            #
 #                                                                           #
 # The script uses GNU find for listing the path and modification-time of    #
 # each file, and GNU diff for determining the least amount of changes       #
-# required. If a file named '.cmd-sync-ignore' is present immediately       #
-# inside the source directory, each line of which is a regular expression   #
-# that can be interpreted by GNU grep, the script will ignore files whose   #
-# path matches either of these expressions.                                 #
+# required.                                                                 #
 #                                                                           #
 # Written by Eric Johannesson, eric@ericjohannesson.com                     #
 #############################################################################
-
-set -e	# Abort if something fails
 
 print_usage(){
 echo "USAGE:"
@@ -117,6 +110,8 @@ number_of_lines(){
 }
 
 # Parse command-line arguments
+
+set -e	# Abort if something fails
 
 NUMBER_OF_ARGUMENTS=$#
 IGNOREFILE=""
