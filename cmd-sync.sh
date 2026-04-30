@@ -241,7 +241,6 @@ DEST_DIRS_TO_BE_CREATED="$TEMP_DIR/dest.dirs.to.be.created"
 DEST_FILES_TO_BE_REMOVED="$TEMP_DIR/dest.files.to.be.removed"
 DEST_FILES_TO_BE_CREATED="$TEMP_DIR/dest.files.to.be.created"
 
-mkdir -p "$TEMP_DIR"
 
 if [ "$IGNOREFILE" = "" ]
 then
