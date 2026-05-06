@@ -1,3 +1,5 @@
+#!/usr/bin/bash
+
 #############################################################################
 # CMD-SYNC                                                                  #
 #                                                                           #
@@ -12,6 +14,7 @@
 #                                                                           #
 # Copyright (C) 2026  Eric Johannesson eric@ericjohannesson.com             #
 #############################################################################
+
 
 # global variables:
 cmd_sync_IGNOREFILE=""
