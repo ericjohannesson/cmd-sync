@@ -10,279 +10,298 @@
 # each file, and GNU diff for determining the least amount of changes       #
 # required.                                                                 #
 #                                                                           #
-# Written by Eric Johannesson, eric@ericjohannesson.com                     #
+# Copyright (C) 2026  Eric Johannesson eric@ericjohannesson.com             #
 #############################################################################
 
-print_usage(){
-echo "USAGE:"
-echo ""
-echo "  cmd-sync [<options>] <command> <path-to-source> <path-to-destination>"
-echo ""
-echo "  COMMANDS:"
-echo ""
-echo "    Any single-quoted shell-command containing '\$IN' and '\$OUT'."
-echo ""
-echo "  OPTIONS:"
-echo ""
-echo "    --dry-run"
-echo ""
-echo "        Destination will not be modified."
-echo ""
-echo "    --ignore <path-to-file>"
-echo ""
-echo "        If file contains a list of regular expressions that can be"
-echo "        interpreted by grep, any file or directory matching such an"
-echo "        expression will be ignored."
-echo ""
-echo "  EXAMPLES:"
-echo ""
-echo "  - Make the destination identical to the source:"
-echo ""
-echo "    cmd-sync 'cp \$IN \$OUT' path/to/directory path/to/copied_directory"
-echo ""
-echo "  - Make the destination an encrypted version of the source:"
-echo ""
-echo "    cmd-sync 'gpg -e -r some@email.com -o \$OUT \$IN' path/to/directory path/to/encrypted_directory"
-echo ""
-echo "  - Make the destination a decrypted version of the source:"
-echo ""
-echo "    cmd-sync 'gpg -d -o \$OUT \$IN' path/to/encrypted_directory path/to/directory"
+# global variables:
+cmd_sync_IGNOREFILE=""
+cmd_sync_DRY_RUN=0
+cmd_sync_CMD=""
+cmd_sync_SRC=""
+cmd_sync_DEST=""
+
+cmd_sync_print_usage () {
+	echo "USAGE:"
+	echo ""
+	echo "  cmd-sync [<options>] <command> <path-to-source> <path-to-destination>"
+	echo ""
+	echo "  COMMANDS:"
+	echo ""
+	echo "    Any single-quoted shell-command containing '\$IN' and '\$OUT'."
+	echo ""
+	echo "  OPTIONS:"
+	echo ""
+	echo "    --dry-run"
+	echo ""
+	echo "        Destination will not be modified."
+	echo ""
+	echo "    --ignore <path-to-file>"
+	echo ""
+	echo "        If file contains a list of regular expressions that can be"
+	echo "        interpreted by grep, any file or directory matching such an"
+	echo "        expression will be ignored."
+	echo ""
+	echo "  EXAMPLES:"
+	echo ""
+	echo "  - Make the destination identical to the source:"
+	echo ""
+	echo "    cmd-sync 'cp \$IN \$OUT' path/to/directory path/to/copied_directory"
+	echo ""
+	echo "  - Make the destination an encrypted version of the source:"
+	echo ""
+	echo "    cmd-sync 'gpg -e -r some@email.com -o \$OUT \$IN' path/to/directory path/to/encrypted_directory"
+	echo ""
+	echo "  - Make the destination a decrypted version of the source:"
+	echo ""
+	echo "    cmd-sync 'gpg -d -o \$OUT \$IN' path/to/encrypted_directory path/to/directory"
 }
 
-add_quotes(){
+cmd_sync_add_quotes () {
 	echo "$1" | sed 's/ \$IN / "$IN" /g' | sed 's/^\$IN /"$IN" /g' | sed 's/ \$IN$/ "$IN"/g' | sed 's/ \$OUT / "$OUT" /g' | sed 's/^\$OUT /"$OUT" /g' | sed 's/ \$OUT$/ "$OUT"/g'
 }
 
-remove_dirs(){
-	if [ "$DRY_RUN" -eq 0 ]
+cmd_sync_remove_dirs () {
+	local LINE
+	if [ "$cmd_sync_DRY_RUN" -eq 0 ]
 	then
 		while read LINE
 		do
-			if [ -d "$DEST/$LINE" ]
+			if [ -d "${cmd_sync_DEST}/${LINE}" ]
 			then
-				rm -r "$DEST/$LINE"
+				rm -r "${cmd_sync_DEST}/${LINE}"
 			fi
 		done < "$1"
 	fi
 }
 
 
-make_dirs(){
-	if [ "$DRY_RUN" -eq 0 ]
+cmd_sync_make_dirs () {
+	local LINE
+	if [ "$cmd_sync_DRY_RUN" -eq 0 ]
 	then
 		while read LINE
 		do
-			mkdir -p "$DEST/$LINE"
+			mkdir -p "${cmd_sync_DEST}/${LINE}"
 		done < "$1"
 	fi
 }
 
-remove_files(){
-	if [ "$DRY_RUN" -eq 0 ]
+cmd_sync_remove_files () {
+	local LINE
+	if [ "$cmd_sync_DRY_RUN" -eq 0 ]
 	then
 		while read LINE
 		do
-			rm "$DEST/$LINE"
+			rm "${cmd_sync_DEST}/${LINE}"
 		done < "$1"
 	fi
 }
 
 
-make_files(){
-	if [ "$DRY_RUN" -eq 0 ]
+cmd_sync_make_files () {
+	local LINE IN OUT
+	if [ "$cmd_sync_DRY_RUN" -eq 0 ]
 	then
 		while read LINE
 		do
-			IN="$SRC/$LINE"
-			OUT="$DEST/$LINE"
-			eval "$CMD"
+			IN="${cmd_sync_SRC}/${LINE}"
+			OUT="${cmd_sync_DEST}/${LINE}"
+			eval "$cmd_sync_CMD"
 			touch "$OUT" -r "$IN"
 		done < "$1"
 	fi
 }
 
-display_lines(){
+cmd_sync_display_lines(){
 	sed 's/^/\t/' "$1"
 }
 
-number_of_lines(){
+cmd_sync_number_of_lines(){
 	wc -l "$1" | cut -f 1 -d ' '
 }
 
-# Parse command-line arguments
 
-set -e	# Abort if something fails
+cmd_sync_parse () {
 
-NUMBER_OF_ARGUMENTS=$#
-IGNOREFILE=""
-DRY_RUN=0
+	local NUMBER_OF_ARGUMENTS=$#
+	local DEST
 
-if [ $NUMBER_OF_ARGUMENTS -lt 3 ]
-then
-	print_usage
-	exit 2
-fi
-
-if [ $NUMBER_OF_ARGUMENTS -gt 6 ]
-then
-	print_usage
-	exit 2
-fi
-
-
-if [ $NUMBER_OF_ARGUMENTS -eq 3 ]
-then
-	CMD=$(add_quotes "$1")
-	SRC=$(realpath "$2")
-	DEST_="$3"
-fi
-
-if [ $NUMBER_OF_ARGUMENTS -eq 4 ]
-then
-	CMD=$(add_quotes "$2")
-	SRC=$(realpath "$3")
-	DEST_="$4"
-
-	if [ "$1" = "--dry-run" ]
+	if [ $NUMBER_OF_ARGUMENTS -lt 3 ]
 	then
-		DRY_RUN=1
-	else
-		print_usage
+		cmd_sync_print_usage
 		exit 2
 	fi
-fi
 
-if [ $NUMBER_OF_ARGUMENTS -eq 5 ]
-then
-	CMD=$(add_quotes "$3")
-	SRC=$(realpath "$4")
-	DEST_="$5"
-	
-	if [ "$1" = "--ignore" ]
+	if [ $NUMBER_OF_ARGUMENTS -gt 6 ]
 	then
-		IGNOREFILE=$(realpath "$2")
-	else
-		print_usage
+		cmd_sync_print_usage
 		exit 2
 	fi
-fi
 
 
-
-if [ $NUMBER_OF_ARGUMENTS -eq 6 ]
-then
-	CMD=$(add_quotes "$4")
-	SRC=$(realpath "$5")
-	DEST_="$6"
-
-	if [ "$1" = "--dry-run" ]
+	if [ $NUMBER_OF_ARGUMENTS -eq 3 ]
 	then
-		DRY_RUN=1
+		cmd_sync_CMD=$(cmd_sync_add_quotes "$1")
+		cmd_sync_SRC=$(realpath "$2")
+		DEST="$3"
+	fi
 
-		if [ "$2" = "--ignore" ]
+	if [ $NUMBER_OF_ARGUMENTS -eq 4 ]
+	then
+		cmd_sync_CMD=$(cmd_sync_add_quotes "$2")
+		cmd_sync_SRC=$(realpath "$3")
+		DEST="$4"
+
+		if [ "$1" = "--dry-run" ]
 		then
-			IGNOREFILE=$(realpath "$3")
+			cmd_sync_DRY_RUN=1
 		else
-			print_usage
+			cmd_sync_print_usage
 			exit 2
 		fi
 	fi
-	
-	if [ "$1" = "--ignore" ]
+
+	if [ $NUMBER_OF_ARGUMENTS -eq 5 ]
 	then
-		IGNOREFILE=$(realpath "$2")
+		cmd_sync_CMD=$(cmd_sync_add_quotes "$3")
+		cmd_sync_SRC=$(realpath "$4")
+		DEST="$5"
+	
+		if [ "$1" = "--ignore" ]
+		then
+			cmd_sync_IGNOREFILE=$(realpath "$2")
+		else
+			cmd_sync_print_usage
+			exit 2
+		fi
+	fi
+
+	if [ $NUMBER_OF_ARGUMENTS -eq 6 ]
+	then
+		cmd_sync_CMD=$(cmd_sync_add_quotes "$4")
+		cmd_sync_SRC=$(realpath "$5")
+		DEST="$6"
+
+		if [ "$1" = "--dry-run" ]
+		then
+			cmd_sync_DRY_RUN=1
+
+			if [ "$2" = "--ignore" ]
+			then
+				cmd_sync_IGNOREFILE=$(realpath "$3")
+			else
+				cmd_sync_print_usage
+				exit 2
+			fi
+		fi
+	
+		if [ "$1" = "--ignore" ]
+		then
+			cmd_sync_IGNOREFILE=$(realpath "$2")
 		
-		if [ "$2" = "--dry-run" ]
+			if [ "$2" = "--dry-run" ]
+			then
+				cmd_sync_DRY_RUN=1
+			else
+				cmd_sync_print_usage
+				exit 2
+			fi
+		fi
+	fi
+
+	if [ ! -d "$cmd_sync_SRC" ]
+	then
+		echo "There is no directory with path '$cmd_sync_SRC'"
+		exit 2
+	fi
+
+	if [ ! "$cmd_sync_IGNOREFILE" = "" ]
+	then
+		if [ ! -f "$cmd_sync_IGNOREFILE" ]
 		then
-			DRY_RUN=1
-		else
-			print_usage
+			echo "There is no file with path '$cmd_sync_IGNOREFILE'"
 			exit 2
 		fi
 	fi
-fi
 
-if [ ! -d "$SRC" ]
-then
-	echo "There is no directory with path '$SRC'"
-	exit 2
-fi
-
-if [ ! "$IGNOREFILE" = "" ]
-then
-	if [ ! -f "$IGNOREFILE" ]
+	if [ ! -d "$DEST" ]
 	then
-		echo "There is no file with path '$IGNOREFILE'"
-		exit 2
+		mkdir -p "$DEST"
 	fi
-fi
 
-if [ ! -d "$DEST_" ]
-then
-	mkdir -p "$DEST_"
-fi
+	cmd_sync_DEST=$(realpath "$DEST")
 
-DEST=$(realpath "$DEST_")
-
-if [ "$DRY_RUN" -eq 1 ]
-then
-	echo "DRY RUN (destination will not be modified)"
-fi
-
-# Start syncing
-
-TEMP_DIR=$(mktemp -d)
-SRC_DIRS="$TEMP_DIR/src.dirs"
-DEST_DIRS="$TEMP_DIR/dest.dirs"
-SRC_FILES="$TEMP_DIR/src.files"
-DEST_FILES="$TEMP_DIR/dest.files"
-DEST_DIRS_TO_BE_REMOVED="$TEMP_DIR/dest.dirs.to.be.removed"
-DEST_DIRS_TO_BE_CREATED="$TEMP_DIR/dest.dirs.to.be.created"
-DEST_FILES_TO_BE_REMOVED="$TEMP_DIR/dest.files.to.be.removed"
-DEST_FILES_TO_BE_CREATED="$TEMP_DIR/dest.files.to.be.created"
+	if [ "$cmd_sync_DRY_RUN" -eq 1 ]
+	then
+		echo "DRY RUN (destination will not be modified)"
+	fi
+}
 
 
-if [ "$IGNOREFILE" = "" ]
-then
-	find "$SRC" -type d -printf "%P\n"  | sort > "$SRC_DIRS"
-	find "$DEST" -type d -printf "%P\n" | sort > "$DEST_DIRS"
-else
-	find "$SRC" -type d -printf "%P\n"  | grep -f "$IGNOREFILE" -v | sort > "$SRC_DIRS"
-	find "$DEST" -type d -printf "%P\n" | grep -f "$IGNOREFILE" -v | sort > "$DEST_DIRS"
-fi
+cmd_sync_main () {
 
-diff "$SRC_DIRS" "$DEST_DIRS" | grep '^>' | cut -b 3- > "$DEST_DIRS_TO_BE_REMOVED"
-diff "$SRC_DIRS" "$DEST_DIRS" | grep '^<' | cut -b 3- > "$DEST_DIRS_TO_BE_CREATED"
-
-echo "DIRECTORIES TO BE REMOVED: $(number_of_lines "$DEST_DIRS_TO_BE_REMOVED")"
-display_lines "$DEST_DIRS_TO_BE_REMOVED"
-remove_dirs "$DEST_DIRS_TO_BE_REMOVED"
-
-echo "DIRECTORIES TO BE CREATED: $(number_of_lines "$DEST_DIRS_TO_BE_CREATED")"
-display_lines "$DEST_DIRS_TO_BE_CREATED"
-make_dirs "$DEST_DIRS_TO_BE_CREATED"
-
-FORMAT="%P\t%T@\n"
-
-if [ "$IGNOREFILE" = "" ]
-then
-	find "$SRC" -type f -printf "$FORMAT"  | sort > "$SRC_FILES"
-	find "$DEST" -type f -printf "$FORMAT" | sort > "$DEST_FILES"
-else
-	find "$SRC" -type f -printf "$FORMAT"  | grep -f "$IGNOREFILE" -v | sort > "$SRC_FILES"
-	find "$DEST" -type f -printf "$FORMAT" | grep -f "$IGNOREFILE" -v | sort > "$DEST_FILES"
-fi
+	local TEMP_DIR=$(mktemp -d)
+	local SRC_DIRS="${TEMP_DIR}/src.dirs"
+	local DEST_DIRS="${TEMP_DIR}/dest.dirs"
+	local SRC_FILES="${TEMP_DIR}/src.files"
+	local DEST_FILES="${TEMP_DIR}/dest.files"
+	local DEST_DIRS_TO_BE_REMOVED="${TEMP_DIR}/dest.dirs.to.be.removed"
+	local DEST_DIRS_TO_BE_CREATED="${TEMP_DIR}/dest.dirs.to.be.created"
+	local DEST_FILES_TO_BE_REMOVED="${TEMP_DIR}/dest.files.to.be.removed"
+	local DEST_FILES_TO_BE_CREATED="${TEMP_DIR}/dest.files.to.be.created"
+	local FORMAT="%P\t%T@\n"
 
 
-diff "$SRC_FILES" "$DEST_FILES" | grep '^>' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_REMOVED"
-diff "$SRC_FILES" "$DEST_FILES" | grep '^<' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_CREATED"
+	if [ "$cmd_sync_IGNOREFILE" = "" ]
+	then
+		find "$cmd_sync_SRC" -type d -printf "%P\n"  | sort > "$SRC_DIRS"
+		find "$cmd_sync_DEST" -type d -printf "%P\n" | sort > "$DEST_DIRS"
+	else
+		find "$cmd_sync_SRC" -type d -printf "%P\n"  | grep -f "$cmd_sync_IGNOREFILE" -v | sort > "$SRC_DIRS"
+		find "$cmd_sync_DEST" -type d -printf "%P\n" | grep -f "$cmd_sync_IGNOREFILE" -v | sort > "$DEST_DIRS"
+	fi
 
-echo "FILES TO BE REMOVED: $(number_of_lines "$DEST_FILES_TO_BE_REMOVED")"
-display_lines "$DEST_FILES_TO_BE_REMOVED"
-remove_files "$DEST_FILES_TO_BE_REMOVED"
+	diff "$SRC_DIRS" "$DEST_DIRS" | grep '^>' | cut -b 3- > "$DEST_DIRS_TO_BE_REMOVED"
+	diff "$SRC_DIRS" "$DEST_DIRS" | grep '^<' | cut -b 3- > "$DEST_DIRS_TO_BE_CREATED"
 
-echo "FILES TO BE CREATED: $(number_of_lines "$DEST_FILES_TO_BE_CREATED")"
-display_lines "$DEST_FILES_TO_BE_CREATED"
-make_files "$DEST_FILES_TO_BE_CREATED"
+	echo "DIRECTORIES TO BE REMOVED: $(cmd_sync_number_of_lines "$DEST_DIRS_TO_BE_REMOVED")"
+	cmd_sync_display_lines "$DEST_DIRS_TO_BE_REMOVED"
+	cmd_sync_remove_dirs "$DEST_DIRS_TO_BE_REMOVED"
 
-rm -r "$TEMP_DIR"
+	echo "DIRECTORIES TO BE CREATED: $(cmd_sync_number_of_lines "$DEST_DIRS_TO_BE_CREATED")"
+	cmd_sync_display_lines "$DEST_DIRS_TO_BE_CREATED"
+	cmd_sync_make_dirs "$DEST_DIRS_TO_BE_CREATED"
+
+
+	if [ "$cmd_sync_IGNOREFILE" = "" ]
+	then
+		find "$cmd_sync_SRC" -type f -printf "$FORMAT"  | sort > "$SRC_FILES"
+		find "$cmd_sync_DEST" -type f -printf "$FORMAT" | sort > "$DEST_FILES"
+	else
+		find "$cmd_sync_SRC" -type f -printf "$FORMAT"  | grep -f "$cmd_sync_IGNOREFILE" -v | sort > "$SRC_FILES"
+		find "$cmd_sync_DEST" -type f -printf "$FORMAT" | grep -f "$cmd_sync_IGNOREFILE" -v | sort > "$DEST_FILES"
+	fi
+
+
+	diff "$SRC_FILES" "$DEST_FILES" | grep '^>' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_REMOVED"
+	diff "$SRC_FILES" "$DEST_FILES" | grep '^<' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_CREATED"
+
+	echo "FILES TO BE REMOVED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_REMOVED")"
+	cmd_sync_display_lines "$DEST_FILES_TO_BE_REMOVED"
+	cmd_sync_remove_files "$DEST_FILES_TO_BE_REMOVED"
+
+	echo "FILES TO BE CREATED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_CREATED")"
+	cmd_sync_display_lines "$DEST_FILES_TO_BE_CREATED"
+	cmd_sync_make_files "$DEST_FILES_TO_BE_CREATED"
+
+	rm -r "$TEMP_DIR"
+}
+
+
+set -e # Abort if something fails
+
+# Parse command-line arguments and set global variables:
+cmd_sync_parse "$@"
+
+# Start syncing:
+cmd_sync_main
