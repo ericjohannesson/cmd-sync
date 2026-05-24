@@ -252,8 +252,11 @@ cmd_sync_main () {
 	local DEST_DIRS_TO_BE_CREATED="${TEMP_DIR}/dest.dirs.to.be.created"
 	local DEST_FILES_TO_BE_REMOVED="${TEMP_DIR}/dest.files.to.be.removed"
 	local DEST_FILES_TO_BE_CREATED="${TEMP_DIR}/dest.files.to.be.created"
-	local FORMAT="%P\t%T@\n"
+	local DEST_FILES_TO_BE_REALLY_REMOVED="${TEMP_DIR}/dest.files.to.be.really.removed"
+	local DEST_FILES_TO_BE_REALLY_CREATED="${TEMP_DIR}/dest.files.to.be.really.created"
+	local DEST_FILES_TO_BE_MODIFIED="${TEMP_DIR}/dest.files.to.be.modified"
 
+	local FORMAT="%P\t%T@\n"
 
 	if [ "$cmd_sync_IGNOREFILE" = "" ]
 	then
@@ -289,12 +292,20 @@ cmd_sync_main () {
 	diff "$SRC_FILES" "$DEST_FILES" | grep '^>' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_REMOVED"
 	diff "$SRC_FILES" "$DEST_FILES" | grep '^<' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_CREATED"
 
-	echo "FILES TO BE REMOVED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_REMOVED")"
-	cmd_sync_display_lines "$DEST_FILES_TO_BE_REMOVED"
-	cmd_sync_remove_files "$DEST_FILES_TO_BE_REMOVED"
+	diff "$DEST_FILES_TO_BE_CREATED" "$DEST_FILES_TO_BE_REMOVED" | grep '^>' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_REALLY_REMOVED"
+	diff "$DEST_FILES_TO_BE_CREATED" "$DEST_FILES_TO_BE_REMOVED" | grep '^<' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_REALLY_CREATED"
+	diff "$DEST_FILES_TO_BE_CREATED" "$DEST_FILES_TO_BE_REALLY_CREATED" | grep '^<' | cut -b 3- | cut -f 1 > "$DEST_FILES_TO_BE_MODIFIED"
 
-	echo "FILES TO BE CREATED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_CREATED")"
-	cmd_sync_display_lines "$DEST_FILES_TO_BE_CREATED"
+	echo "FILES TO BE REMOVED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_REALLY_REMOVED")"
+	cmd_sync_display_lines "$DEST_FILES_TO_BE_REALLY_REMOVED"
+
+	echo "FILES TO BE CREATED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_REALLY_CREATED")"
+	cmd_sync_display_lines "$DEST_FILES_TO_BE_REALLY_CREATED"
+
+	echo "FILES TO BE MODIFIED: $(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_MODIFIED")"
+	cmd_sync_display_lines "$DEST_FILES_TO_BE_MODIFIED"
+
+	cmd_sync_remove_files "$DEST_FILES_TO_BE_REMOVED"
 	cmd_sync_make_files "$DEST_FILES_TO_BE_CREATED"
 
 	rm -r "$TEMP_DIR"
