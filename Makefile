@@ -5,6 +5,8 @@ SHELL := bash
 MAKEFLAGS += --warn-undefined-variables
 MAKEFLAGS += --no-builtin-rules
 
+.PHONY: default clean test install
+
 default:
 	@echo 'no default target'
 
@@ -21,7 +23,7 @@ test: bin/cmd-sync
 clean:
 	git clean -fdX
 
-install: bin/cmd-sync
+install: test
 	mkdir -p ~/bin
 	cp bin/cmd-sync ~/bin/cmd-sync
 
