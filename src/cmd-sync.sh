@@ -102,16 +102,25 @@ cmd_sync_remove_files () {
 
 
 cmd_sync_make_files () {
-	local LINE IN OUT
+	local LINE IN OUT RATIO
+	local FACTOR=20
+	local COUNT=1
+	local EMPTY=$(printf '.%.0s' {1..20})
+	local FULL=$(printf '#%.0s' {1..20})
+
 	if [ "$cmd_sync_DRY_RUN" -eq 0 ]
 	then
 		while read LINE
 		do
 			IN="${cmd_sync_SRC}/${LINE}"
 			OUT="${cmd_sync_DEST}/${LINE}"
+			RATIO=$((${COUNT}*${FACTOR}/$2))
+			echo -ne "\rSYNCING: [${FULL:0:RATIO}${EMPTY:RATIO:FACTOR}] ${COUNT}/$2\033[K"
+			COUNT=$((${COUNT}+1))
 			eval "$cmd_sync_CMD"
 			touch "$OUT" -r "$IN"
 		done < "$1"
+		echo ""
 	fi
 }
 
@@ -255,6 +264,7 @@ cmd_sync_main () {
 	local DEST_FILES_TO_BE_REALLY_REMOVED="${TEMP_DIR}/dest.files.to.be.really.removed"
 	local DEST_FILES_TO_BE_REALLY_CREATED="${TEMP_DIR}/dest.files.to.be.really.created"
 	local DEST_FILES_TO_BE_MODIFIED="${TEMP_DIR}/dest.files.to.be.modified"
+	local NR_OF_FILES_TO_BE_CREATED
 
 	local FORMAT="%P\t%T@\n"
 
@@ -306,9 +316,16 @@ cmd_sync_main () {
 	cmd_sync_display_lines "$DEST_FILES_TO_BE_MODIFIED"
 
 	cmd_sync_remove_files "$DEST_FILES_TO_BE_REMOVED"
-	cmd_sync_make_files "$DEST_FILES_TO_BE_CREATED"
+
+	NR_OF_FILES_TO_BE_CREATED="$(cmd_sync_number_of_lines "$DEST_FILES_TO_BE_CREATED")"
+
+	if [ $NR_OF_FILES_TO_BE_CREATED -gt 0 ]
+	then
+		cmd_sync_make_files "$DEST_FILES_TO_BE_CREATED" "$NR_OF_FILES_TO_BE_CREATED"
+	fi
 
 	rm -r "$TEMP_DIR"
+
 }
 
 
