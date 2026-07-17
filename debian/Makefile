@@ -21,7 +21,7 @@ architecture = all
 maintainer = Eric Johannesson <eric@ericjohannesson.com>
 homepage = https://github.com/ericjohannesson/cmd-sync
 description = A bash-script for making the file structure of a *destination directory* identical to the file structure of a *source directory* (without changing the source), where each destination file is the result of applying a user-specified *shell command* to the corresponding source file.
-depends = bash, findutils, diffutils, grep, sed
+depends = bash, coreutils, findutils, diffutils, grep, sed
 
 directory = ${package}_${version}-${release}_${architecture}
 
